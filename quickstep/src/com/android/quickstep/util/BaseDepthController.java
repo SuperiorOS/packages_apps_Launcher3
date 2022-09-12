@@ -73,7 +73,7 @@ public class BaseDepthController {
     /**
      * Blur radius when completely zoomed out, in pixels.
      */
-    protected final int mMaxBlurRadius;
+    protected final float mMaxBlurRadius;
     protected final WallpaperManager mWallpaperManager;
     protected boolean mCrossWindowBlursEnabled;
 
@@ -115,7 +115,7 @@ public class BaseDepthController {
             mMaxBlurRadius = activity.getResources().getDimensionPixelSize(
                     R.dimen.max_depth_blur_radius_enhanced);
         } else {
-            mMaxBlurRadius = activity.getResources().getInteger(R.integer.max_depth_blur_radius);
+            mMaxBlurRadius = activity.getResources().getDimension(R.dimen.max_depth_blur_radius);
         }
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
@@ -195,7 +195,7 @@ public class BaseDepthController {
                 ? 0 : (int) (blurAmount * mMaxBlurRadius);
 
         if (forceDepthOrBlur && mCurrentBlur != mMaxBlurRadius) {
-            mCurrentBlur = mMaxBlurRadius;
+            mCurrentBlur = (int) mMaxBlurRadius;
         }
 
         SurfaceControl.Transaction transaction = new SurfaceControl.Transaction();
