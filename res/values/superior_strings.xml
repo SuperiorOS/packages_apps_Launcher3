@@ -20,4 +20,8 @@
     <string name="label_g_icon">Google App</string>
     <string name="label_voice_search">Voice search</string>
     <string name="label_search">Search</string>
+
+    <!-- Kill App recents action shortcut -->
+    <string name="recent_task_option_kill_app">Kill</string>
+    <string name="recents_app_killed">App killed</string>
 </resources>

@@ -28,7 +28,9 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT;
 
 import android.app.ActivityManager;
+import android.app.ActivityManagerNative;
 import android.app.ActivityOptions;
+import android.app.IActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -36,12 +38,14 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowManagerGlobal;
 import android.window.SplashScreen;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -311,17 +315,29 @@ public interface TaskShortcutFactory {
 
         @Override
         public void onClick(View view) {
+            String packageName = mTaskContainer.getItemInfo()
+                    .getTargetComponent().getPackageName();
             TaskView taskView = mTaskContainer.getTaskView();
-            RecentsView<?, ?> recentsView = taskView.getRecentsView();
-            if (recentsView != null) {
-                dismissTaskMenuView();
-                recentsView.dismissTaskView(taskView, true, true);
-                forceStopCurrentApp();
-                mTarget.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
-                        .log(LAUNCHER_SYSTEM_SHORTCUT_CLOSE_APP_TAP);
+            if (taskView != null) {
+                RecentsView<?, ?> recentsView = taskView.getRecentsView();
+                if (recentsView != null) {
+                    dismissTaskMenuView();
+                    recentsView.dismissTaskView(taskView, true, true);
+                    mTarget.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
+                            .log(LAUNCHER_SYSTEM_SHORTCUT_CLOSE_APP_TAP);
+                }
+            }
+            if (packageName != null) {
+                IActivityManager iam = ActivityManagerNative.getDefault();
+                try {
+                    iam.forceStopPackage(packageName, UserHandle.USER_CURRENT);
+                    Toast appKilled = Toast.makeText(mTarget.asContext(), R.string.recents_app_killed,
+                        Toast.LENGTH_SHORT);
+                    appKilled.show();
+                } catch (RemoteException e) { }
             }
         }
-        
+
         private void forceStopCurrentApp() {
             Context context = mTaskContainer.getTaskView().getContext();
             final String pkg = mTaskContainer.getTask().getKey().getPackageName();
@@ -598,7 +614,7 @@ public interface TaskShortcutFactory {
                 TaskContainer taskContainer) {
             return Collections.singletonList(new CloseSystemShortcut(
                     R.drawable.ic_close_option,
-                    R.string.recent_task_option_close, container, taskContainer));
+                    R.string.recent_task_option_kill_app, container, taskContainer));
         }
 
         @Override
